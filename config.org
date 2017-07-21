@@ -1,0 +1,1390 @@
+#+TITLE: Emacs Configuration
+#+AUTHOR: David DeFranza
+#+OPTIIONS: ^:nil
+#+OPTIONS: eval never-export
+#+OPTIONS: header-args :comments no
+#+OPTIONS: toc:3
+#+PROPERTY: header-args :results silent
+#+STARTUP: content
+
+* Introduction
+Though there are those that have declared the "[[http://www.slate.com/articles/technology/bitwise/2014/05/oldest_software_rivalry_emacs_and_vi_two_text_editors_used_by_programmers.html][Editor Wars]]" over, with [[http://www.linux-magazine.com/Online/Blogs/Off-the-Beat-Bruce-Byfield-s-Blog/The-End-of-the-Editor-Wars][Vim the decicive winner]], some of us still insist on using the ever-versatile, ever-expandable, never-simple Emacs. Perhaps it's because we see ourselves as "[[https://xkcd.com/378/][real programmers]]." Perhaps it's because we enjoy the "[[https://bytebaker.com/2011/11/04/salvaging-dead-time-and-procrastiworking/][procrastiworking]]" of maintaining a 10,000 line configuration file. Perhaps it's because a humble text editor has evolved to become nearly an [[http://wiki.c2.com/?EmacsAsOperatingSystem][operating system of its own]]. Or, perhaps, as [[http://blog.vivekhaldar.com/post/31970017734/new-frontiers-in-text-editing][Vivek Haldar has pointed out]]:
+
+#+BEGIN_QUOTE
+
+Text editors are like wine. The older the better. You do not want a shiny new text editor. You want the text editor that has been around long enough and used by enough geeks that every conceivable pattern of manipulating symbols on the screen has been thought of, and crystallized into a re-usable pack.
+
+#+END_QUOTE
+
+Regardless of his or her reason for choosing Emacs, every user must contend with the fact that the greatest strength of the platform, its customizability, creates a serious management challenge. Most veteran Emacs users, after years of pasting snippets of code into a =.emacs= file, have reached a point of [[https://www.emacswiki.org/emacs/DotEmacsBankruptcy][Dot Emacs Bankruptcy]].
+
+There are many reasonable ways to address this challenge. One popular and very good approach is to create a [[https://www.emacswiki.org/emacs/DotEmacsModular][modular or component-based design]], in which each function or group of customizations is stored in its own file with a single central =init.el= that combines the files dynamically.
+
+While the modular approach makes some things, like debugging and unit testing, much more simple, the inevitable growth of the file tree presents management problems of its own. While not perfect, utilizing =org-mode= to combine the configuration code greatly improves organization and simplifies maintenance. 
+
+This is especially true when a [[http://www-cs-faculty.stanford.edu/~uno/lp.html][literate programming]] approach is used. Originally described by Donald Knuth, literate programming is an expansive idea that has been described and extended by numerous articles and books. At its simplest we can say the approach is defined by the combination of "programming language and documentation language."
+
+Org is particularly well suited to literate programming (see "[[https://justin.abrah.ms/emacs/literate_programming.html][Literate Programming with org-babel]]," "[[http://www.howardism.org/Technical/Emacs/literate-programming-tutorial.html][Introduction to Literate Programming]]," and "[[http://orgmode.org/worg/org-contrib/babel/how-to-use-Org-Babel-for-R.html][How to Use Emacs Org-Babel Mode to Write Literate Programming Document in R Language]]" for more) and, as a result, is an [[http://sachachua.com/blog/2012/06/literate-programming-emacs-configuration-file/][excellent tool]] for managing the elisp code of an Emacs configuration.
+
+The package [[https://github.com/pierre-lecocq/literal-emacs][literate-emacs]] combines both of these methods so that management happens through a single =org-mode= configuration file that is then split into individual modules when compiled. The following method, however, is fully contained within an =org-mode= file.
+
+For a basic introduction to the concept and approach outlined here, watch the two videos produced by Daniel Mai:
+
+- [[https://www.youtube.com/watch?v=VIuOwIBL-ZU&feature=youtu.be][Emacs Tutorial: Overview of init files using org-mode and use-package (Part 1 of 2)]]
+- [[https://youtu.be/gRb3bq0NiXY][Emacs Tutorial: Init.el setup for and org-mode congfig (Part 2 of 2)]]
+
+** A bit of perspective
+It is important to present this document with a bit of perspective. I have designed this configuration of Emacs to be used in Mac OS X, my primary operating system, to perform data analysis, write academic papers, and perform the occasional light web coding. As such, this cannot be considered a "developer edition" of Emacs but may be very suitable for those performing data science, [[http://simplystatistics.org/2014/06/06/the-real-reason-reproducible-research-is-important/][reproducable research]], or managing tech-oriented websites.
+*** "A Jedi must first build his own lightsaber"
+Creating an maintaining an expansive Emacs configuration is no longer necessary. In addition to the many other text editors available, including Vim and [[https://www.sublimetext.com/][Sublime Text]], there are pre-packaged binaries of Emacs-like editors, like [[http://spacemacs.org/][Spacemacs]] and [[http://aquamacs.org/features.shtml][Aquamacs]] complete with many popular settings as default. There are also "starter kits" like "[[http://eschulte.github.io/emacs-starter-kit/][Emacs Starter Kit]]" and "[[https://kieranhealy.org/resources/emacs-starter-kit/][An Emacs Starter Kit for the Social Sciences]]." In addition, Emacs itself has become much more friendly with the addition of a package manager, =package=, and the [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Easy-Customization.html][customize interface]].
+
+But, as we know, "[[https://youtu.be/_ayT0EZwbks?t=1m19s][a Jedi must first build his own lightsaber]]" and that it's best to "[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][eat your own dog food]]." Similarly, there is no better way for an Emacs user to understand Emacs than creating his or her own =init.el=. 
+
+** Acknowledgments
+This configuration file, including the general approach to managing the config and several specific blocks of code contained within was heavily influenced by the excellent work of:
+
+- Lars Tveito ([[https://github.com/larstvei/dot-emacs/blob/master/init.org][GitHub]])
+- [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]
+- Alan Pearce ([[https://git.alanpearce.uk/alan/dotfiles/src/master/tag-emacs/emacs.d/init.org][GitHub]])
+- [[http://www.danielmai.net/][Daniel Mai]] ([[https://github.com/danielmai/.emacs.d/blob/master/config.org][GitHub]])
+
+In addition, there are a number of excellent and expansive blogs that explore the use of Emacs and its customization. Some of those referenced in making this document include:
+
+- [[http://pragmaticemacs.com/][Pragmatic Emacs]]
+- [[http://emacsredux.com/][Emacs Redux]]
+- [[http://emacs-fu.blogspot.com/][Emacs-fu]]
+- [[http://endlessparentheses.com/][Endless Parentheses]]
+
+Finally, a great many thanks to these Emacs power users and to the incredible community that exists on [[https://www.reddit.com/r/emacs/][r/emacs]] and [[http://emacs.stackexchange.com/][emacs.stackexchange]].
+
+Other ideas, approaches, and snippets are credited within the respective sections.
+
+** License
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see [[http://www.gnu.org/licenses/]]
+
+* Create the Org file
+Next, create =config.org=. The initial length of this file can vary, but I recommend including at least the "[[Document Preamble]]," the "[[Initialize Package Management and Archives]]," and the "[[Tangle and Byte-Compile on Save]]" sections listed below.
+
+Once =config.org= is setup, simply save the file, exit Emacs, and relaunch. This first load may take a while, especially if a lot of new packages need to be installed. But once it's finished, Emacs should be running with all of the customizations defined in =config.org=.
+
+* Document Preamble
+The preamble of an Org file includes metadata and options that tell =org-mode= and its helpers how to interpret, display, and categorize the file. Copy the following preamble and paste it at the top of =config.org=.
+
+#+BEGIN_SRC org :tangle no
+
+  # The title of the document.
+  ,#+TITLE: Emacs Configuration
+
+  # The author of the document.
+  ,#+AUTHOR: David DeFranza
+
+  # Turn off TeX-like syntax for sub- and super-scripts.
+  ,#+OPTIONS: ^:nil
+
+  # Permit interactive evaluation of code blocks but inhibit evaluation on export.
+  ,#+OPTIONS: eval never-export
+
+  # Do not insert comments in tangled files beyond those which already exist in the
+  # code blocks.
+  ,#+OPTIONS: header-args :comments no
+
+  # Add a table of contents including headings to the third level
+  ,#+OPTIONS: toc:3
+
+  # Send the commands, echo the results in the minibuffer, but do not change the
+  # org-mode buffer.
+  ,#+PROPERTY: header-args :results silent
+
+  # Set initial visibility to include all first and second level
+  # headings
+  ,#+STARTUP: content
+
+#+END_SRC
+
+* Increase Garbage Collection
+By default, Emacs performs garbage collection after every 800,000 bytes of consing in 64-bit systems, 400,000 bytes in 32-bit systems. While this increases responsiveness during normal use, it dramatically reduces speed when compiling large files, like an expansive Emacs =init.el=.
+
+By increasing the threshold during the initial load, it's possible to increase startup speeds. At the end of the init process, garbage collection is reset close to the default and  [[http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/][prohibited during loading tasks]].
+
+For more information on garbage collection, see:
+
+- [[https://medium.com/@yonkeltron/explaining-garbage-collection-algorithms-by-keeping-your-fridge-tidy-2636012cfeee#.5hsjr5pt][Explaining garbage collection algorithms by keeping your fridge tidy]] by Jonathan E. Magan
+- [[http://wiki.c2.com/?GarbageCollection][Garbage collection]] at the c2 wiki
+- [[http://www.maths.lse.ac.uk/Courses/MA407/gcsurvey.pdf][Uniprocessor garbage collection techniques]] by Paul R. Wilson
+
+** Set a higher garbage collection threshold for startup
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Set the garbage collection threshold to 100 MB.
+  (setq gc-cons-threshold 100000000)
+
+#+END_SRC
+
+* Enforce "Sane Defaults"
+As much as Emacs users love Emacs, everyone seems to agree that some of the default settings are outdated, annoying, and just strange.
+
+While setting these options certainly falls under the "nice to have" category, it comes first in the file to reduce "flicker," or the perceptible painting and erasing of elements.
+
+Many of these defaults were inspired by [[https://github.com/larstvei/dot-emacs/blob/master/init.org][Lars Tveito]] and the [[https://www.emacswiki.org/emacs/EmacsCrashCode][EmacsWiki]].
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Enforce "sane defaults" early to minimize flickering UI.
+  (setq inhibit-startup-screen t                ; Turn off the startup screen
+        initial-scratch-message nil             ; Remove Scratch Buffer message
+        auto-revert-interval 1                  ; Refresh buffers more quickly
+        echo-keystrokes 0.1                     ; Show keystrokes fast
+        recentf-max-saved-items 100             ; Show more recent files
+        read-file-name-completion-ignore-case t ; Ignore case when completing
+                                                ; file names
+        ring-bell-function 'ignore              ; Turn off alert bell
+        visible-bell nil                        ; Turn off error bell
+        message-log-max t                       ; Don't truncate lines in the
+                                                ; message log
+        sentence-end-double-space nil           ; Kill automatic double spacing
+                                                ; after periods
+        require-final-newline t                 ; Always add a newline at the end
+                                                ; of a file
+        column-number-mode t                    ; Display the current
+                                                ; column
+        undo-limit 100000                       ; Increase the number of undo
+        recenter-positions '(top middle bottom) ; Change the recenter
+                                                ; order of C-l.
+        )
+
+  ;; Some variables are buffer-local so defining them with a simple setq only
+  ;; implements that change in a single buffer. By using setq-default, we can
+  ;; change the local variable's default value.
+  (setq-default fill-column 80                      ; Enforce the "Eighty Column
+                                                    ; Rule"
+                  indent-tabs-mode nil              ; Use spaces instead
+                                                    ; of tabs
+                  ;; auto-fill-function 'do-auto-fill ; Auto-fill-mode
+                  ;;                                  ; everywhere
+                  )
+
+  ;; Remove scroll bars.
+  (scroll-bar-mode -1)
+
+  ;; Remove tool bars.
+  (tool-bar-mode -1)
+
+  ;; Remove the menu bar.
+  (menu-bar-mode -1)
+
+  ;; Remove the mode-line startup message.
+  (defun display-startup-echo-area-message ()
+    (message ""))
+
+  ;; Highlight matching parens.
+  (show-paren-mode 1)
+
+  ;; Allow response of y-n instead of yes-no.
+  (fset 'yes-or-no-p 'y-or-n-p)
+
+  ;; Enable the erase-buffer command.
+  (put 'erase-buffer 'disabled nil)
+
+  ;; Delete selected region on insert.
+  (delete-selection-mode +1)
+
+  ;; By default in Emacs, C-a returns the cursor to the beginning of the line and
+  ;; M-m returns the cursor to the first non-white space character. Some people
+  ;; like the M-m functionality to be the default, especially when editing code.
+  ;; An excellent method for doing this comes from Emacs Redux:
+  ;; http://emacsredux.com/blog/2013/05/22/smarter-navigation-to-the-beginning-of-a-line/
+  ;;
+  ;; However, I prefer to preserve the default functionality.
+
+#+END_SRC
+* Initialize Package Management and Archives
+** Require the Common Lisp compatibility layer
+Emacs Lisp is a distinct version of Lisp and, as a result, there has been some divergence between the two. Some syntax, elements, and features of Common Lisp, are missing from standard Emacs Lisp. This sometimes causes conflicts with certain packages, macros, or functions that rely on Common Lisp conventions. Accommodations for list manipulation, for example, are far more robust in Common Lisp.
+
+A [[http://ergoemacs.org/emacs/elisp_common_lisp_in_emacs.html][controversial solution]] to this problem is the Common Lisp compatibility layer. The package adds several elements of Common Lisp to Emacs. It's controversial because the way in which it does this is inelegant and in some cases broken. While this is a valid criticism, the Common Lisp libraries, whether =cl= or its replacement =cl-lib= prevent Emacs developers from having to recreate common functions in every package. Summarizing both the advantages and challenges of the library, [[http://lists.gnu.org/archive/html/emacs-devel/2012-02/msg00202.html][Stefen Monnier called it]] "a handy toolbox, whose design was inspired by the experience of Common-Lisp."
+
+Thus, it is enabled here:
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Require the "handy toolbox."
+  (use-package cl-lib)
+
+  ;; Enable better list handling.
+  (use-package dash)
+
+#+END_SRC
+
+** Load package repositories
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Require the Emacs package manager.
+  (require 'package)
+
+  ;; Prevent additional installation of packages.
+  (setq package-enable-at-startup nil)
+
+  ;; Add package archives to Emacs.
+
+  (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                           ("org" . "http://orgmode.org/elpa/")
+                           ("melpa-stable" . "http://stable.melpa.org/packages/")
+                           ("melpa" . "http://melpa.org/packages/")
+                           ("marmalade" . "http://marmalade-repo.org/packages/"))
+        ;; Set priorities for the various archives, favoring the
+        ;; canonical over stable over bleeding edge.
+        package-archive-priorities '(("gnu" . 20)
+                                     ("org" . 18)
+                                     ("melpa-stable" . 15)
+                                     ("melpa" . 10)
+                                     ("marmalade" . 5)))
+
+  ;; Start the package manager.
+  (package-initialize)
+
+  (setq package-menu-async t              ; Allow the package menu to
+                                          ; load asynchronously,
+                                          ; speeding up the time from
+                                          ; command execution to
+                                          ; returning the first results.
+        
+        package-menu-hide-low-priority t  ; When a package exists in
+                                          ; multiple archives, only show
+                                          ; the highest priority
+                                          ; instance in our list.
+        )
+
+#+END_SRC
+** Bootstrap use-package
+#+BEGIN_SRC emacs-lisp
+
+  ;; Bootstrap use-package. Inspired by:
+  ;; https://stackoverflow.com/a/21065066
+  (if (not (package-installed-p 'use-package))
+      (progn
+        (package-refresh-contents)
+        (package-install 'use-package)))
+
+  ;; Since use-package is not required at runtime, we can delay it.
+  (eval-when-compile
+    (require 'use-package))
+  (require 'bind-key)                ; Load key bindings right away.
+
+  (setq use-package-always-ensure t  ; Always install missing packages.
+        use-package-verbose t        ; Get information about package
+                                     ; loading.
+        )
+
+#+END_SRC
+
+* Theme Emacs
+Theming and styling an editor is a very personal process and sometimes, our tastes can be fickle. I am a fan of dark themes in general, and [[http://ethanschoonover.com/solarized][Solarized]] in particular. But sometimes lighting and contrast dictate a light theme. It's helpful to not simply load a list of custom themes, but to be able to quickly toggle between dark and light versions.
+
+** Trust custom themes
+By default, Emacs does not trust custom themes, which can make loading them a pain. It's easy to turn this feature off, acknowledging the small risk doing so creates.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Tell Emacs to trust custom themes by default.
+  (setq custom-safe-themes t)
+
+#+END_SRC
+
+** Solarized theme
+Fortunately, there is an excellent port of [[https://github.com/bbatsov/solarized-emacs][Solarized to Emacs]].
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package solarized-theme
+    :init
+    (setq solarized-distinct-fringe-background t     ; Make the fringe
+                                                     ; stand out from
+                                                     ; the background.
+          
+          solarized-use-variable-pitch t             ; Don't change the
+                                                     ; font for some
+                                                     ; headings and
+                                                     ; titles.
+          
+          solarized-scale-org-headlines nil          ; Don't change the
+                                                     ; size of org-mode
+                                                     ; headlines.
+          )
+
+    ;; Load the default theme.
+    (load-theme 'solarized-dark t)
+    
+    :config
+    ;; If both a light and dark theme is loaded, a function can
+    ;; quickly switch between the two. This solution came from
+    ;; http://stackoverflow.com/a/18796138
+
+    ;; Cycle through this set of themes
+    (setq my-themes '(solarized-dark solarized-light))
+
+    (setq my-cur-theme nil)
+    (defun cycle-my-theme ()
+      "Cycle through a list of themes, my-themes"
+      (interactive)
+      (when my-cur-theme
+        (disable-theme my-cur-theme)
+        (setq my-themes (append my-themes (list my-cur-theme))))
+      (setq my-cur-theme (pop my-themes))
+      (load-theme my-cur-theme t))
+
+    ;; Switch to the first theme in the list above
+    (cycle-my-theme)
+
+    ;; Bind this function to C-t.
+    :bind ("C-c t" . cycle-my-theme)
+    )
+
+#+END_SRC
+
+** Use the Inconsolata font
+While the default font in Emacs is fine, using a (subjectively) good looking font that handles anti-aliasing is important when text forms the foundation of the work space. Personally, I like the [[http://www.levien.com/type/myfonts/inconsolata.html][Inconsolata]] font developed by [[http://www.levien.com/][Raph Levien]].
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Set the font face and size globally.
+  (set-frame-font "Inconsolata 12" nil t)
+
+  ;; Set the font face for various types of scaled text, including titles and
+  ;; headlines in Org-mode.
+  (set-face-attribute 'default nil :font "Inconsolata")
+  (set-face-attribute 'fixed-pitch nil :font "Inconsolata")
+  (set-face-attribute 'variable-pitch nil :font "Inconsolata")
+
+#+END_SRC
+
+** Enable syntax highlighting globally
+Emacs does not activate syntax highlighting by default. One reason for this is that reformatting very long files can create a noticeable and annoying lag in buffer load times. Just-in-time highlighting helps to address this issue.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Sets font-lock mode so that debugging can be used.
+  (setq font-lock-support-mode 'jit-lock-mode
+        jit-lock-stealth-time 15               ;; Fontify sections of the buffer
+                                               ;; when Emacs has been idle for 15
+                                               ;; seconds
+        jit-lock-defer-contextually t          ;; Fontify around lines in focus or
+                                               ;; modified to add context
+        jit-lock-stealth-nice 0.5              ;; The time in seconds to pause
+                                               ;; between stealth chunks
+        )
+        
+  ;; Enable multi-line (contextual) fontification.
+  (setq-default font-lock-multiline t)
+
+#+END_SRC
+
+* Modify the Mode Line
+The default mode line reports the essential information for working in a buffer. This can, of course, be expanded and customized considerably. [[http://www.lunaryorn.com/posts/make-your-emacs-mode-line-more-useful.html][Sebastian Wiesner has an in-depth discussion]] of some of these customizations.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Currently, I use the default mode line, modified with the smart-mode-line and
+  ;; nyan-mode packages.
+
+#+END_SRC
+
+** Enable smart-mode-line
+The general appearance and behavior of the mode line can be improved simply through the [[https://github.com/Malabarba/smart-mode-line][smart-mode-line]] package.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package smart-mode-line
+    :config
+    ;; Try to match the style of the current theme.
+    (setq sml/theme 'respectful)
+
+    ;; Start smart-line-mode.
+    (sml/setup)
+    )
+
+#+END_SRC
+
+** Enable nyan-mode
+It has [[https://youtu.be/NBArWrn6FnY?t=756][been said]] that [[https://github.com/TeMPOraL/nyan-mode/][nyan-mode]] is "everything that's wrong (or right) with Emacs."
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package nyan-mode
+    :config
+    ;; Activate nyan-mode.
+    (nyan-mode 1)
+    )
+
+#+END_SRC
+
+* Redirect Customize
+Though the customize interface built into Emacs makes some configuration easy, I prefer to make these definitions through =init=. Some changes, however, get written to the custom dialog automatically. To address this, I simply redirect these definitions to a separate file.
+
+** Redirect customize to a separate file
+
+#+BEGIN_SRC emacs-lisp
+
+  (setq custom-file "~/.emacs.d/custom.el")
+  (load custom-file :noerror :nomessage)
+
+#+END_SRC
+
+* Organize Backups and Autosave
+Redirecting backups and auto-saves keeps the =.emacs.d/= directory clean without sacrificing the benefits of the services.
+
+** Redirect backups
+When Emacs performs an auto-save, it dumps the new files in the same directory instead of filing them away in a dedicated folder. Fortunately, this is simple to fix thanks to a solution from the [[https://www.emacswiki.org/emacs/BackupDirectory][EmacsWiki]]. 
+
+#+BEGIN_SRC emacs-lisp
+
+  (setq backup-by-copying t             ; Copying preserves symlinks
+        backup-directory-alist
+        '(("." . "~/.emacs.d/backups")) ; Keeps the file tree clean
+        delete-old-versions t
+        kept-new-versions 6
+        kept-old-versions 2
+        version-control t)              ; Create versioned backups
+
+#+END_SRC
+
+** Organize auto-saves
+In addition to backups, Emacs also creates an auto-save file that can be used for recovery in the event of a crash or failure. These files also tend to clutter up working directories. Again, this solution comes from the [[https://www.emacswiki.org/emacs/AutoSave][EmacsWiki]].
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Define the variable pointing to the backups folder.
+  (defvar my-auto-save-folder "~/.emacs.d/backups/")
+
+  ;; Establish a file prefix for auto-save files.
+  ;; Send auto-save files to the backup folder.
+  (setq auto-save-list-file-prefix "~/.emacs.d/backups/.saves-"          
+        auto-save-file-name-transforms `((".*" ,my-auto-save-folder t))
+
+        ;; Emacs also creates a symbolic link to currently active files
+        ;; cannot be moved. We can, however, disable them.
+        create-lockfiles nil)
+
+#+END_SRC
+
+* Make Ibuffer the default
+While =list-buffers= provides a utilitarian means of switching between currently open buffers, it lacks the features necessary to effectively navigate a large list. A substantial improvement is =buffer-menu= and =Ibuffer= is even more feature rich. Making =Ibuffer= the default makes using Emacs a lot easier.
+
+** Require Ibuffer and make it the default
+Replacing the default with =Ibuffer= is easy.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package ibuffer
+    :demand
+    :bind ("C-x C-b" . ibuffer)
+    :config
+    (setq
+     ;; Inhibit confirmation before buffer deletion.
+     ibuffer-expert t
+
+    ;; Hide empty filter groups.
+    ibuffer-show-empty-filter-groups nil
+     )
+  )
+
+#+END_SRC
+
+* Manage Frames and Windows
+One of the interesting features of Emacs that truly shows its age is the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Windows.html#Windows][nomenclature for the windowing abstraction]]. In confusing contrast to contemporary convention, the overall container or main display of the app is called a /frame/. Each frame can contain several frames, which are known as /windows/.
+
+In most Emacs sessions, it's common to have several buffers open and at least two working windows. Managing all this can become cumbersome. A built in library, =windmove= makes juggling windows very simple.
+
+With the following customization, adopted from [[http://pragmaticemacs.com/emacs/whizz-between-windows-with-windmove/][Practical Emacs]], allows a combination of the command key and arrow keys to jump windows in Mac OS X, offering an alternative to the =C-x o= default.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package windmove
+    :config
+    ;; Use Shift-arrow to switch windows.
+    (windmove-default-keybindings 'meta)
+
+    ;; Wrap around at window edges.
+    (setq windmove-wrap-around t))
+
+#+END_SRC
+
+** Kill this buffer, not that buffer
+By default, =C-x k= runs the command =kill-buffer=, which brings up a list of open buffers. A more typical use-case is that the user simply wants to close the buffer in focus. Remapping =kill-this-buffer= to the default binding enables this functionality.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Unbind C-x k to prevent conflicts.
+  (global-unset-key (kbd "C-x k"))
+
+  ;; Rebind C-x k to kill-this-buffer.
+  (global-set-key (kbd "C-x k") 'kill-this-buffer)
+
+  ;; Bind kill-buffer in case it's needed.
+  (global-set-key (kbd "C-c K") 'kill-buffer)
+
+#+END_SRC
+
+* List Recent Files
+When editing a lot of different files in Emacs, especially across projects and directories, it can be annoying to have to retype the path or file name over and over again. To address this problem, [[https://www.emacswiki.org/emacs/RecentFiles][Emacs has an minor mode]] called =recentf= that automatically saves and then lists recently opened files across sessions. Activating the minor mode is easy:
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Activate recentf-mode globally by default.
+  (recentf-mode 1)
+
+  (setq
+   ;; Set the number of files to remember.
+   recentf-max-menu-items 25
+   ;; Prevent recentf from tripping over itself while attempting to clean remote
+   ;; (TRAMP) files.
+   recentf-auto-cleanup 'never
+   )
+
+  ;; Set a keybinding to open the recent files menu.
+  (global-set-key "\C-x\ \C-r" 'recentf-open-files)
+
+#+END_SRC
+
+By default, the recent files list is compiled when Emacs quits, specifically, on =kill-emacs-hook=. If Emacs exits unexpectedly or abruptly, the recent file list will not be created. Updating the list periodically while Emacs is running avoids this issue.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Update the recentf-save-list every 5 minutes while Emacs is running.
+  (run-at-time nil (* 5 60) 'recentf-save-list)
+
+#+END_SRC
+
+* Manage Files With Dired
+Emacs includes a powerful file manager, Dired. Like all things in Emacs, it's made more useful with some customization.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Load the dired-x library.
+  (add-hook 'dired-load-hook
+            (function (lambda () (load "dired-x"))))
+
+  ;; Use the dired+ package.
+  (use-package dired+)
+
+  ;; Custom the appearance and behavior of Dired.
+  (setq
+   ;; Show details by default.
+   diredp-hide-details-initially-flag nil
+   diredp-hide-details-propagate-flag nil
+
+   ;; Display file sizes in a more human-friendly way.
+   dired-listing-switches "-alh"
+
+   ;; Allow editing of file permissions in Dired.
+   wdired-allow-to-change-permissions t
+   )
+
+  ;; Configure dired-narrow.
+  (define-key dired-mode-map "/" 'dired-narrow)
+
+  ;; Configure peep-dired.
+  (define-key dired-mode-map "P" 'peep-dired)
+
+#+END_SRC
+
+* Visualize Undo History
+Emacs includes the expected undo functionality bound to =C-/= and =C-x u=. By [[http://www.dr-qubit.org/undo-tree/undo-tree.el][adding the package]] =undo-tree=, it's possible to [[http://pragmaticemacs.com/emacs/advanced-undoredo-with-undo-tree/][extend this functionality]] to include a very helpful visualization of the undo history.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package undo-tree
+    :init
+    ;; Enable undo-tree mode everywhere.
+    (global-undo-tree-mode 1)
+
+    ;; Note that undo-tree takes control of one of the defaults, C-x u, and remaps
+    ;; it to undo-tree-visualize.
+
+    ;; Undo remains bound to C-/ but redo is now bound to C-S-/ instead of C-g C-/.
+    )
+
+#+END_SRC
+
+* Expand and Improve the Kill Ring
+Instead of "cut" and "paste," Emacs "kills" and "yanks." The =ctrl-x= / =ctrl-v= convention is so entrenched at this point, adjusting to the Emacs default keybindings can feel awkward. Beyond learning the new muscle memory, however, is only part of the challenge. There are several default behaviors that border on annoyances. Fortunately, these can be improved through customization.
+
+** Add the system clipboard to the kill-ring
+The Emacs cut and paste history, known as the kill-ring, does not align with the system clipboard by default. While cutting and pasting between applications works, Emacs does not store system clipboard entries in the history. Adding the system clipboard to the kill-ring is a [[http://pragmaticemacs.com/emacs/add-the-system-clipboard-to-the-emacs-kill-ring/][simple fix]].
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Save whatever is in the current system clipboard before replacing it with an
+  ;; Emacs kill or copy.
+  ;;
+  ;; http://pragmaticemacs.com/emacs/add-the-system-clipboard-to-the-emacs-kill-ring/
+  (setq save-interprogram-paste-before-kill t)
+
+#+END_SRC
+
+** Configure easy-kill
+Under the default settings, =M-w= copies a region, or in Emacs terms, saves a region to the kill-ring. By replacing this function with [[https://github.com/leoliu/easy-kill][the package]] =easy-kill=, the same function becomes a bit smarter, selecting either the active (highlighted) region, the URL at cursor, the email at cursor, and finally the current (but not highlighted) line. =easy-kill= also transforms =M-w= into a prefix key, [[https://github.com/leoliu/easy-kill][enabling many more specific actions]].
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package easy-kill
+    :config
+    ;; Replace kill-ring-save binding with easy-kill.
+    (global-set-key [remap kill-ring-save] 'easy-kill)
+    )
+
+#+END_SRC
+
+** Kill the line if no region is active
+Similarly, it's helpful to be able to simply cut a line if no region is active (highlighted). To accomplish this, no additional packages are necessary.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Kill the line if no region is active.
+  ;; http://pragmaticemacs.com/emacs/cut-whole-line/
+  (defadvice kill-region (before slick-cut activate compile)
+    "When called interactively with no active region, kill a single line instead."
+    (interactive
+     (if mark-active (list (region-beginning) (region-end))
+       (list (line-beginning-position)
+             (line-beginning-position 2)))))
+
+#+END_SRC
+
+** Browse the kill ring
+The idea of the kill-ring, and endless history of cuts, copies, and pastes, is excellent but navigating through dozens of items can be tedious. The package =browse-kill-ring= [[https://github.com/browse-kill-ring/browse-kill-ring][makes this much easier]].
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package browse-kill-ring
+    :bind ("C-c y" . browse-kill-ring)
+    )
+
+#+END_SRC
+
+* Use Ido for Recommendations and Completions
+"Interactively DO things," or =ido-mode= dramatically increases the speed and ease of opening files and buffers by supercharging the built-in completion engine. For a more thorough introduction, watch the screencast by Stuart Halloway called "[[https://vimeo.com/1013263][What You Can Learn From ido.el]]" and read the article at Mastering Emacs, "[[https://www.masteringemacs.org/article/introduction-to-ido-mode][Introduction to Ido Mode]]."
+
+** Start Ido and its helpers
+Ido is powerful on its own, but the functionality is improved with the addition of a few helper packages, including =ido-ubiquitous=, =ido-vertical-mode=, and =flx-ido= which provides fuzzy logic search and matching.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Require Ido and force ido-mode.
+  (use-package ido
+    :init
+    (ido-mode 1)
+    (ido-everywhere 1)
+    :config
+    (setq
+     ;; Disable ido faces to see flx highlights.
+     ido-enable-flex-matching 1
+     ido-use-faces nil
+     )
+    )
+
+  ;; Require ido-ubiquitous to get Ido everywhere.
+  (use-package ido-completing-read+
+    :init
+    (ido-ubiquitous-mode 1)
+    )
+
+  ;; Display Ido results as a vertical list.
+  (use-package ido-vertical-mode
+    :init
+    (ido-vertical-mode 1)
+    )
+
+  ;; Require flx-ido to add fuzzy logic search and matching.
+  (use-package flx-ido
+    :init
+    (flx-ido-mode 1)
+    )
+
+#+END_SRC
+
+** Use Ido to find files
+=Ibuffer= doesn't provide an option to integrate with =ido=. A function from [[https://www.emacswiki.org/emacs/InteractivelyDoThings#toc17][the EmacsWiki]] adds the functionality.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Make ido find files with Ibuffer. This function is taken from:
+  ;; https://www.emacswiki.org/emacs/InteractivelyDoThings#toc17
+  (defun ibuffer-ido-find-file (file &optional wildcards)
+    "Like `ido-find-file', but default to the directory of the buffer at point."
+    (interactive
+     (let ((default-directory
+             (let ((buf (ibuffer-current-buffer)))
+               (if (buffer-live-p buf)
+                   (with-current-buffer buf
+                     default-directory)
+                 default-directory))))
+       (list (ido-read-file-name "Find file: " default-directory) t)))
+    (find-file file wildcards))
+
+  ;; Use ido instead of read-file.
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (define-key ibuffer-mode-map "\C-x\C-f"
+                'ibuffer-ido-find-file)))
+
+#+END_SRC
+
+** Enable Smex
+For all the benefits of =ido=, it does not extend to META commands. [[https://github.com/nonsequitur/smex][The package smex]] expands the power of the completion command across the =M-x= binding.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Require and initialize smex.
+  (use-package smex
+    :init
+    (smex-initialize)
+    :bind (
+    ;; Bind smex to common keys.
+    ("M-x" . smex)
+    ("M-X" . smex-major-mode-commands)
+
+    ;; This keybinding brings back OG M-x.
+    ("C-c C-c M-x" . execute-extended-command)
+    )
+    )
+
+#+END_SRC
+
+* Navigate the Buffer With Avy
+Even with a wide range of navigation commands, jumping around long files in Emacs can be challenging. One [[https://github.com/abo-abo/avy][package that facilitates this]] is =avy=. Though Avy has extensive capabilities, the most useful function for my purposes is =avy-goto-word-1=.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package avy
+    :config
+    (setq
+     ;; Show the full path before the target, leaving all original text.
+     avy-styles-alist '((avy-goto-word-1 . pre))
+     )
+    :bind ("M-s" . avy-goto-word-1)
+    )
+
+#+END_SRC
+
+* Enforce UTF-8 Everywhere
+Enforcing UTF-8 character encoding minimizes the total number of bytes used by a file, ensures compatibility with ASCII, and provides improved error recovery. Moreover, it features greater support for non-English character sets, particularly Asian languages.
+
+A short summary of the pros and cons of UTF-8, 16, and 32 can be found at [[http://www.differencebetween.net/technology/difference-between-utf-8-and-utf-16/][Difference Between]] and a much more interesting and comprehensive manifesto can be found at [[http://utf8everywhere.org/][UTF-8 Everywhere]].
+
+** Enable UTF-8
+#+BEGIN_SRC emacs-lisp
+
+  ;; There are many solutions for this but the most comprehensive comes from
+  ;; http://stackoverflow.com/questions/2901541/which-coding-system-should-i-use-in-emacs
+
+    (setq utf-translate-cjk-mode nil)       ; Disable CJK coding/encoding
+                                            ; (Chinese/Japanese/Korean characters)
+    (set-language-environment 'utf-8)
+    (set-keyboard-coding-system 'utf-8-mac) ; For old Carbon emacs on OS X only
+    (setq locale-coding-system 'utf-8)
+    (set-default-coding-systems 'utf-8)
+    (set-terminal-coding-system 'utf-8)
+    (unless (eq system-type 'windows-nt)
+    (set-selection-coding-system nil))      ; Setting this to "nil" and not
+                                            ; forcing UTF-8 preserves coding of the
+                                            ; clipboard text and prevents unexpected translations.
+    (prefer-coding-system 'utf-8)
+
+#+END_SRC
+* Read PDF Files in Emacs
+By default, Emacs supports reading DVI, PostScript (PS), PDF, OpenDocument, and Microsoft Office documents through the Document Viewer or DocView. This works very well with slight modification.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; By default, DocView stops C-p and C-n at the top and bottom of a PDF page,
+  ;; respectively. Enabling continuous movement allows for more natural
+  ;; navigation.
+  (setq doc-view-continuous t)
+
+#+END_SRC
+
+More robust PDF tools are available, including annotations, editing, and more. [[https://github.com/politza/pdf-tools][pdf-tools]] offers the most complete set of tools for working with PDF files in Emacs. Getting =pdf-tools= to work can be a bit of a chore, but [[https://emacs.stackexchange.com/questions/13314/install-pdf-tools-on-emacs-macosx][this method described on Stack Exchange]] works well for OS X and [[http://tech.memoryimprintstudio.com/pdf-annotation-related-tools/][this method works]] for Arch Linux.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install)
+    )
+
+#+END_SRC
+
+* Customize Org-mode
+If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]]. The following customizations really only scratch the surface of creating a "life in plain text."
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package org
+    :mode (("\\.org$" . org-mode))
+    :ensure org-plus-contrib
+    :config
+    (setq
+     ;; Load additional Org modules.
+     org-modules (quote (org-habit
+                         org-drill))
+     ;; Scale images to 500px in width.
+     org-image-actual-width '(500)
+     ;; Add syntax highlighting to code blocks.
+     org-src-fontify-natively t
+     org-src-tab-acts-natively t
+     ;; Turn off line truncation.
+     org-startup-truncated nil
+     ;; Inherit parent properties.
+     org-use-property-inheritance t
+     ;; Define structured templates
+     org-structure-template-alist
+     '(
+
+       ;; Maintain the org-mode defaults.
+       ("s" "#+BEGIN_SRC ?\n\n#+END_SRC" "<src lang=\"?\">\n\n</src>")
+       ("e" "#+BEGIN_EXAMPLE\n?\n#+END_EXAMPLE" "<example>\n?\n</example>")
+       ("q" "#+BEGIN_QUOTE\n?\n#+END_QUOTE" "<quote>\n?\n</quote>")
+       ("v" "#+BEGIN_VERSE\n?\n#+END_VERSE" "<verse>\n?\n</verse>")
+       ("V" "#+BEGIN_VERBATIM\n?\n#+END_VERBATIM" "<verbatim>\n?\n</verbatim>")
+       ("c" "#+BEGIN_CENTER\n?\n#+END_CENTER" "<center>\n?\n</center>")
+       ("l" "#+BEGIN_LaTeX\n?\n#+END_LaTeX" "<literal style=\"latex\">\n?\n</literal>")
+       ("L" "#+LaTeX: " "<literal style=\"latex\">?</literal>")
+       ("h" "#+BEGIN_HTML\n?\n#+END_HTML" "<literal style=\"html\">\n?\n</literal>")
+       ("H" "#+HTML: " "<literal style=\"html\">?</literal>")
+       ("a" "#+BEGIN_ASCII\n?\n#+END_ASCII" "")
+       ("A" "#+ASCII: " "")
+       ("i" "#+INDEX: ?" "#+INDEX: ?")
+       ("I" "#+INCLUDE: %file ?" "<include file=%file markup=\"?\">")
+
+       ;; Extend defaults to include useful additional modes.
+       ("R" "#+BEGIN_SRC R \n\n#+END_SRC" "<src lang=\"?\">\n\n</src>")
+       ("p" "#+BEGIN_SRC python \n\n#+END_SRC" "<src lang=\"?\">\n\n</src>")
+       ("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC" "<src lang=\"emacs-lisp\">\n?\n</src>")
+       )
+     )
+    ;; Activate common language interpreters.
+    (org-babel-do-load-languages
+     'org-babel-languages
+     '((C . t)                     ; C
+       (cpp . t)                   ; C++
+       (calc . t)                  ; Calc
+       (emacs-lisp . t)            ; Emacs Lisp
+       (julia . t)                 ; Julia
+       (js . t)                    ; Javascript
+       (latex . t)                 ; LaTeX
+       (lisp . t)                  ; Lisp
+       (matlab . t)                ; Matlab
+       (processing . t)            ; Processing
+       (python . t)                ; Python
+       (R . t)                     ; R
+       (sass . t)                  ; Sass
+       (shell . t)                 ; Shell
+       (stata . t)                 ; Stata
+       ))
+    ;; Make windmove work in org-mode:
+    (add-hook 'org-shiftup-final-hook 'windmove-up)
+    (add-hook 'org-shiftleft-final-hook 'windmove-left)
+    (add-hook 'org-shiftdown-final-hook 'windmove-down)
+    (add-hook 'org-shiftright-final-hook 'windmove-right)
+    )
+
+#+END_SRC
+** Record thoughts and activities with Org-journal
+[[https://github.com/bastibe/org-journal][Org-journal]] is a package that makes it easy to keep a journal in Org that is integrated into a larger GTD system. It handles a lot of the integration out of the box with just a little tweaking.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package org-journal
+    :config
+    (setq
+     ;; Tell org-journal where it should save files.
+     org-journal-dir "~/GTD/JOURNAL"
+     ;; Save org-journal files as *.org files.
+     org-journal-file-format "%Y%m%d.org"
+     )
+    )
+
+#+END_SRC
+* Configure LaTex and AUCTeX
+[[https://www.gnu.org/software/auctex/][AUCTeX]] is a comprehensive environment for writing TeX and LaTex files.
+
+** Configure AUCTeX
+Once MacTeX and AUCTeX have been installed, some configuration improves the performance and usability of the editor.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package latex
+    :ensure auctex
+    :mode ("\\.tex\\'" . latex-mode)
+    :config
+    (setq
+     ;; Compile LaTex into PDF.
+     TeX-PDF-mode t
+     ;; From the AUCTeX manual:
+     ;; AUCTeX depends heavily on being able to extract
+     ;; information from the buffers by parsing them. Since parsing the buffer can be
+     ;; somewhat slow, the parsing is initially disabled. You are encouraged to
+     ;; enable them by adding the following lines to your ‘.emacs’ file.
+     TeX-parse-self t
+     TeX-auto-save t
+     ;; Enable the RefTeX plugin.
+     reftex-plug-into-AUCTeX t
+     )
+    ;; Load helpful minor modes.
+    (add-hook 'LaTex-mode-hook 'visual-line-mode) ; Make editing long lines easier
+    (add-hook 'LaTex-mode-hook 'flyspell-mode)    ; Enable dynamic spell checking
+    (add-hook 'LaTex-mode-hook 'flycheck-mode)    ; Enable dynamic syntax checking
+    (add-hook 'LaTex-mode-hook 'LaTeX-math-mode)  ; Enable math mode by default
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; Enable RefTeX by default
+    )
+
+#+END_SRC
+* Enable Spelling and Grammar Check
+To make Emacs a reliable tool for creating and editing text, it must have a convenient, accurate, and reliable spellchecker. There are many options but the built-in =Flyspell= provides an interface to popular dictionaries and engines like =ispell=, =aspell=, and =hunspell=. 
+
+** Install aspell with appropriate dictionaries
+Though =ispell= was the original default spellchecking engine for Unix systems, it has been modernized by [[http://aspell.net/][aspell]]. A newer alternative is =hunspell=, which was developed for Mozilla and OpenOffice. There is [[http://aspell.net/test/cur/][significant evidence]], however, that =aspell= outperforms [[http://penguindreams.org/blog/aspell-and-hunspell-a-tale-of-two-spell-checkers/][hunspell]].
+
+To install =aspell= with English dictionaries, enter the following in the command line:
+
+#+BEGIN_SRC sh :tangle no
+
+  $ pacman -S aspell-en
+
+#+END_SRC
+
+** Configure Flyspell
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Define aspell as the spellchecking engine.
+  (setq-default ispell-program-name "aspell")
+
+  ;; Set the default language dictionary.
+  (ispell-change-dictionary "en_US" t)
+
+  ;; Prevent Flyspell from printing a log for every checked word in a buffer to
+  ;; avoid performance impacts.
+  (setq flyspell-issue-message-flag nil)
+
+  (add-hook 'text-mode-hook 'flyspell-mode)       ; Activate Flyspell by default
+                                                  ; in text modes..
+  (add-hook 'org-mode-hook 'turn-on-flyspell)     ; Activate Flyspell by default
+                                                  ; in org-mode.
+  (add-hook 'prog-mode-hook 'flyspell-prog-mode)  ; Spellcheck comments in
+                                                  ; programming modes.
+
+  ;; Prevent Flycheck from checking code blocks in org-mode.
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_src". "#\\+end_src"))
+
+  ;; Improve Flyspell keybindings.
+  (global-set-key (kbd "C-c w") 'ispell-word)
+  (global-set-key (kbd "C-c p") 'flyspell-check-previous-highlighted-word)
+  (defun flyspell-check-next-highlighted-word ()
+    "Custom function to spell check next highlighted word"
+    (interactive)
+    (flyspell-goto-next-error)
+    (ispell-word))
+  (global-set-key (kbd "C-c n") 'flyspell-check-next-highlighted-word)
+
+  (eval-after-load "flyspell"
+    '(progn
+       (define-key flyspell-mouse-map [C-down-mouse-1] #'flyspell-correct-word)
+       ))
+
+#+END_SRC
+
+* Configure Magit and Git
+[[https://magit.vc/][Magit]] is a [[http://stackoverflow.com/questions/6976473/what-does-the-term-porcelain-mean-in-git][porcelain]] for Git that runs inside of Emacs. Essentially, =magit= provides a human-accessible interface to Git within Emacs, making the [[https://www.masteringemacs.org/article/introduction-magit-emacs-mode-git][management of version control easy]] and very Emacs-like. For experienced Git users, =magit= is an excellent method for bringing version control into Emacs, mostly eliminating the need to pop out to a terminal to make a commit or push. However, while ultimately =magit= simplifies Git tasks, it may make learning the process confusing for those completely new to the process.
+
+The [[https://magit.vc/][project homepage]] and [[https://github.com/magit/magit/blob/master/Documentation/magit.org][github page]] both have helpful documentation for getting started.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package magit
+    :config
+    (setq
+     ;; When a file changes on disk, Magit reverts buffers which visit files inside
+     ;; the current repository which can impact performance. Only refresh the status
+     ;; buffer when necessary.
+     ;; Bind the Magit status buffer to a convenient key.
+     magit-refresh-status-buffer nil
+
+     ;; Disable the default Emacs version control interface when using Git to prevent
+     ;; it from doubling work or conflicting with Magit.
+     vc-handled-backends (delq 'Git vc-handled-backends)
+     )
+    ;; Improve refresh rate of the references buffer by not displaying tags.
+    (remove-hook 'magit-refs-sections-hook 'magit-insert-tags)
+
+    ;; Performance during commit can be improved by inhibiting a diff of the
+    ;; changes. Comparing these changes, however, is often useful.
+    (remove-hook 'server-switch-hook 'magit-commit-diff)
+  
+    :bind ("C-x g" . magit-status)
+    )
+
+#+END_SRC
+** Mark lines changed since last commit
+Making frequent commits is best practice, but sometimes when lots of editing is happening having an indication of changes is helpful. [[https://github.com/syohex/emacs-git-gutter][git-gutter]] does this in a simple and unobtrusive way.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package git-gutter
+    :init
+    ;; Add a global minor mode for git-gutter.
+    (global-git-gutter-mode t)
+
+    :config
+    ;; Change how the minor-mode name displays in the mode-line.
+    ;; The first character should be a space.
+    (custom-set-variables
+     '(git-gutter:lighter " GG"))
+    )
+
+#+END_SRC
+
+** Quickly browse through commit history
+The killer feature of Git is that it creates a complete record of a file's history. Browsing through these old versions is sometimes necessary to recover lost code, identify where a change was introduced, or review the progression of revisions. [[https://github.com/pidu/git-timemachine][git-timemachine]] makes such reviews easy.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package git-timemachine
+    :config
+    (setq git-timemachine-show-minibuffer-details t)
+    )
+
+#+END_SRC
+* Configure Projectile
+[[https://github.com/bbatsov/projectile][Projectile]] is a project interaction library for Emacs. It makes working at the project level in Emacs easier without introducing unnecessary dependencies. 
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package projectile
+    :config
+    (setq
+     ;; Identify a sub-directory after selecting a project.
+     projectile-switch-project-action 'projectile-find-dir
+
+     ;; Allow top-level directories to be associated with a project.
+     projectile-find-dir-includes-top-level t
+     )
+    )
+
+#+END_SRC
+
+With =ibuffer-projectile= buffers can be [[https://github.com/purcell/ibuffer-projectile][grouped automatically]] based on their project affiliation.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package ibuffer-projectile
+    :config
+    (add-hook 'ibuffer-hook
+      (lambda ()
+        (ibuffer-projectile-set-filter-groups)
+        (unless (eq ibuffer-sorting-mode 'alphabetic)
+          (ibuffer-do-sort-by-alphabetic))))
+    )
+
+#+END_SRC
+* Enable Auto-Complete Globally
+[[https://github.com/auto-complete/auto-complete][auto-complete]] is an intelligent auto-completion extension for Emacs.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package auto-complete
+    :init
+    ;; Load the default configuration for auto-complete.
+    (ac-config-default)
+
+    :bind
+    ;; Invoke auto-complete.
+    ("M-TAB" . auto-complete)
+    )
+
+#+END_SRC
+* Configure Common Languages
+** Statistical analysis with ESS
+/[[http://ess.r-project.org/][Emacs Speaks Statistics]]/ (ESS) is a script-writing package for Emacs that interacts with various [[http://stats.blogoverflow.com/2011/08/using-emacs-to-work-with-r/][statistical analysis packages]] including R, S-Plus, SAS, and Stata.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package ess
+    :init (require 'ess-site)
+    :config
+    (setq
+     ;; Configure ESS for writing R.
+
+     ;; Start R in the current working directory.
+     ess-ask-for-ess-directory nil
+     ;; Tell Emacs where to find R.
+     inferior-R-program-name "/usr/bin/R"
+     ;; Make the R buffer behave.
+     comint-scroll-to-bottom-on-input t
+     comint-scroll-to-bottom-on-output t
+     comint-move-point-for-output t
+     ;; Always ask where to save a buffer that contains an R process.
+     ess-ask-about-transfile t
+
+     ;; Configure ESS for writing SAS.
+
+     ;; Use the standard SAS unix function keys in ESS modes.
+     ess-sas-local-unix-keys t
+     ;; Use standard SAS indentation when TAB is invoked.
+     ess-sas-edit-keys-toggle 0
+
+     ;; Configure ESS for writing and interacting with MATLAB.
+
+     ;; Currently, this is not needed. For some background, see
+     ;; http://blogs.mathworks.com/community/2009/09/14/matlab-emacs-integration-is-back/
+     )
+
+    ;; Enable some useful minor modes.
+
+    ;; Enable smartparens by default in ESS.
+    ;; This method comes from an issue thread on GitHub.
+    ;; https://github.com/Fuco1/smartparens/issues/83#issuecomment-17347892
+    (add-hook 'ess-R-post-run-hook 'smartparens-mode)
+
+    ;; Ensure smartparens is enabled by default in all ESS modes, not just R mode.
+    (add-hook 'ess-mode-hook 'smartparens-mode)
+
+    ;; Ensure Flyspell programming mode is enabled in ESS buffers.
+    (add-hook 'ess-mode-hook 'flyspell-prog-mode)
+    )
+
+#+END_SRC
+** Python
+One package, =elpy= turns Emacs into a full-fledged python IDE. After following the [[https://github.com/jorgenschaefer/elpy][unique installation instructions]], all that's needed is:
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package elpy
+    :config
+    (elpy-enable)
+    )
+
+#+END_SRC
+
+** Shell scripts
+Emacs includes =sh-mode= by default for editing shell scripts.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package flycheck-checkbashisms
+    :config
+    ;; By default, Flycheck includes many syntax checking engines. The following
+    ;; offers either improvements over the default or additional languages.
+    (eval-after-load 'flycheck '(add-hook 'flycheck-mode-hook #'flycheck-checkbashisms-setup))
+    )
+
+#+END_SRC
+** Multi-language web templates
+Since web documents often incorporate multiple languages, including HTML, CSS, Javascript, and PHP, no single major mode would be satisfactory. Mixing language major modes in Emacs is challenging. Fortunately, there is a single mode, [[http://web-mode.org/][web-mode]] that accommodates most of the common web languages.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package web-mode
+    :mode (
+           ;; Associate web-mode with common file types.
+           ("\\.phtml\\'" . web-mode)     ; PHP HTML
+           ("\\.tpl\\.php\\'" . web-mode) ; PHP templates
+           ("\\.[agj]sp\\'" . web-mode)   ; Java server
+           ("\\.as[cp]x\\'" . web-mode)   ; Active Server Pages
+           ("\\.erb\\'" . web-mode)       ; HTML and Ruby
+           ("\\.mustache\\'" . web-mode)  ; Mustache Templates
+           ("\\.djhtml\\'" . web-mode)    ; Django HTML
+           ("\\.html?\\'" . web-mode)     ; Good 'ole HTML
+           )
+    )
+
+#+END_SRC
+** CSS/SCSS/SASS
+Emacs includes very good default CSS support by default. For SASS and SCSS there are modes that build on the foundation CSS mode.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Load scss-mode.
+  (use-package scss-mode
+    ;; Associate .scss files with scss-mode.
+    :mode ("\\.scss\\'" . scss-mode)
+    )
+
+  ;; Load sass-mode.
+  (use-package sass-mode
+    ;; Associate .sass files with sass-mode.
+    :mode ("\\.sass\\'" . sass-mode)
+    )
+
+#+END_SRC
+
+** JavaScript
+Some have [[https://www.emacswiki.org/emacs/Js2Mode][called js2]] the "best JavaScript mode available for Emacs." It is very good and the preferred mode for both JavaScript and JSON.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package js2-mode
+    :mode (
+           ;; Associate js2-mode with JavaScript file types.
+           ("\\.js\\'" . js2-mode)
+           ;; Associate json-mode with JSON files.
+           ("\\.json\\'" . js2-mode)
+           )
+    :config
+    ;; Enable js2-mode with extras.
+    (js2-imenu-extras-mode)
+    ;; By default, Flycheck includes many syntax checking engines. The following
+    ;; offers either improvements over the default or additional languages.
+
+    ;; Use JavaScript standard.
+    (flycheck-define-checker javascript-standard
+                             "JavaScript syntax checking based on Standard."
+                             :command ("javascript-standard" source-original)
+                             :error-patterns
+                             ((error line-start
+                                     (file-name)
+                                     ":"
+                                     line
+                                     ":"
+                                     (message)
+                                     line-end))
+                             :modes js2-mode)
+    )
+
+#+END_SRC
+
+Including a [[http://stackoverflow.com/questions/13603021/what-is-a-repl-in-javascript][REPL]] makes writing and evaluating JavaScript much easier and more enjoyable. [[http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/][Emacs can use Node for this]], once it's installed.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package js-comint
+    :config
+    (setq
+     ;; Use Node as the compiler.
+     inferior-js-program-command "node"
+     ;; Define the REPL function.
+     inferior-js-mode-hook
+     (lambda ()
+       ;; We like nice colors
+       (ansi-color-for-comint-mode-on)
+       ;; Deal with some prompt nonsense
+       (add-to-list 'comint-preoutput-filter-functions
+                    (lambda (output)
+                      (replace-regexp-in-string ".*1G\.\.\..*5G" "..."
+                                                (replace-regexp-in-string ".*1G.*3G" "&gt;" output)))))
+     )
+    )
+#+END_SRC
+
+** PHP
+The default [[https://github.com/ejmr/php-mode][php-mod]]e handles the syntax highlighting and indentation while other modes including =auto-complete= and =flycheck= provide [[https://www.philnewton.net/guides/emacs-as-a-php-editor/][useful additions]] globally.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Automatically enable PHP mode whenever a *.php file is loaded.
+  (add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
+
+#+END_SRC
+
+* Enable Large File Support
+By default, Emacs issues a warning when attempting to open files larger than 10MB. Obviously, this is very common so increasing the threshold reduce the annoyance of having to confirm files.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Issue a warning when opening files larger than 100MB.
+  (setq large-file-warning-threshold 100000000)
+
+#+END_SRC
+
+Editing truly large files, those 1GB or larger, an additional package is necessary. The [[https://github.com/m00natic/vlfi][View Large Files package]], known as  =vlf=, gets the job done.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package vlf-setup)
+
+#+END_SRC
+* Reset the Garbage Collection Threshold
+To preserve performance, garbage collection must be reset to [[https://www.reddit.com/r/emacs/comments/3kqt6e/2_easy_little_known_steps_to_speed_up_emacs_start/][close to the default]] after setup is complete.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Set the garbage collection threshold to 10mb.
+
+  (setq gc-cons-threshold 1000000)
+
+#+END_SRC
+
+Instead of forcing a higher default threshold, loading and processing times can be improved by [[http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/][inhibiting garbage collection when the mini-buffer is active]].
+
+#+BEGIN_SRC emacs-lisp
+
+  (defun my-minibuffer-setup-hook ()
+    (setq gc-cons-threshold most-positive-fixnum))
+
+  (defun my-minibuffer-exit-hook ()
+    (setq gc-cons-threshold 1000000))
+
+  (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
+  (add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)
+
+#+END_SRC
+
+* Initialize and Configure emacs-async
+The [[https://github.com/jwiegley/emacs-async][library from John Wiegley]], =emacs-async=, enables some asynchronous processing in Emacs, especially through the Dired interface.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package async
+               :config
+               ;; Automatically async dired processes.
+               (autoload 'dired-async-mode "dired-async.el" nil t)
+               (dired-async-mode 1)
+
+               ;; Compile packages asynchronously.
+               (async-bytecomp-package-mode 1))
+
+#+END_SRC
+
+* Tangle and Byte-Compile on Save
+This function tangles and byte-compiles =config.org= into =init.el= on save. There are many, many methods for doing this, but this function was borrowed from [[http://emacs.stackexchange.com/a/22729][Stack Exchange]].
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Asynchronously tangle and byte-compile config.org on save.
+
+  ;; Define the function.
+  (defun tangle-init-async ()
+    "If the current buffer is 'config.org' the code-blocks are tangled."
+
+    ;; Allow the function when the current buffer is config.org.
+    (when (equal (buffer-file-name) (expand-file-name (concat
+      user-emacs-directory "config.org")))
+      ;; Start async.
+      (async-start
+       ;; Start the tangle function.
+       `(lambda ()
+          ;; We need Org to tangle.
+          (require 'org)
+          ;; Tangle config.org into init.el, interpreting all emacs-lisp
+          ;; code blocks.
+          (org-babel-tangle-file (expand-file-name (concat user-emacs-directory "config.org"))
+                                 (expand-file-name (concat user-emacs-directory "init.el")
+                                                   "emacs-lisp")))
+       ;; Start the byte-compile function.
+       (lambda (result)
+         ;; Byte-compile the new init.el.
+         (byte-compile-file (expand-file-name (concat user-emacs-directory "init.el")))
+         (message "Tangled file compiled.")))))
+
+  ;; Perform this function after every file save.
+  (add-hook 'after-save-hook 'tangle-init-async)
+
+
+#+END_SRC
