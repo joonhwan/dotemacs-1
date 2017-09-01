@@ -216,6 +216,17 @@ Thus, it is enabled here:
   ;; Require the "handy toolbox."
   (use-package cl-lib)
 
+  ;; Include the older version as a fallback.
+  (use-package cl)
+
+  ;; Creating a fallback seems to solve some errors and weirdness with various
+  ;; packages. This approach was adapted from:
+  ;; https://williambert.online/2013/05/emacs-cl-lib-madness/
+  ;; Require Common Lisp (cl in <=24.2, cl-lib in >=24.3).
+  (if (require 'cl-lib nil t)
+      ;; Else we're on an older version so require cl.
+      (require 'cl))
+
   ;; Enable better list handling.
   (use-package dash)
 
@@ -830,6 +841,20 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
     :mode (("\\.org$" . org-mode))
     :ensure org-plus-contrib
     :config
+    ;; Create a function to identify privileged languages. This function was taken
+    ;; from: https://emacs.stackexchange.com/a/21128/16455
+    (defun my-org-confirm-babel-evaluate (lang body)
+      "Define privileged languages and identify unprivileged
+  languages"
+      (not (member lang '("R" "LaTex" "python" "ipython"))))
+    ;; Create a function to include standard LaTeX front-matter in the appropriate
+    ;; place in the document. From:
+    ;; http://orgmode.org/worg/org-tutorials/org-latex-export.html#org6a70a80
+    (defun org-export-latex-no-toc (depth)
+      "Prevent the LaTeX exporter from forcing table of contents placement and spacing."
+      (when depth
+        (format "%% Org-mode is exporting headings to %s levels.\n"
+                depth)))
     (setq
      ;; Load additional Org modules.
      org-modules (quote (org-habit
@@ -843,6 +868,11 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
      org-startup-truncated nil
      ;; Inherit parent properties.
      org-use-property-inheritance t
+     ;; Allow evaluation of code blocks without confirmation, but only for
+     ;; privileged languages.
+     org-confirm-babel-evaluate 'my-org-confirm-babel-evaluate
+     ;; Stop the default LaTeX exporter table of contents behavior.
+     org-export-latex-format-toc-function 'org-export-latex-no-toc
      ;; Define structured templates
      org-structure-template-alist
      '(
@@ -866,33 +896,30 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
        ;; Extend defaults to include useful additional modes.
        ("R" "#+BEGIN_SRC R \n\n#+END_SRC" "<src lang=\"?\">\n\n</src>")
        ("p" "#+BEGIN_SRC python \n\n#+END_SRC" "<src lang=\"?\">\n\n</src>")
+       ("ip" "#+BEGIN_SRC ipython :session \n\n#+END_SRC" "<src lang=\"?\">\n\n</src>")
        ("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC" "<src lang=\"emacs-lisp\">\n?\n</src>")
        )
      )
     ;; Activate common language interpreters.
     (org-babel-do-load-languages
-     'org-babel-languages
-     '((C . t)                     ; C
-       (cpp . t)                   ; C++
-       (calc . t)                  ; Calc
-       (emacs-lisp . t)            ; Emacs Lisp
-       (julia . t)                 ; Julia
-       (js . t)                    ; Javascript
-       (latex . t)                 ; LaTeX
-       (lisp . t)                  ; Lisp
-       (matlab . t)                ; Matlab
-       (processing . t)            ; Processing
-       (python . t)                ; Python
-       (R . t)                     ; R
-       (sass . t)                  ; Sass
-       (shell . t)                 ; Shell
-       (stata . t)                 ; Stata
-       ))
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (latex . t)
+       (python . t)
+       (ipython . t)
+       (R . t)
+       (shell . t)
+       )
+     )
     ;; Make windmove work in org-mode:
     (add-hook 'org-shiftup-final-hook 'windmove-up)
     (add-hook 'org-shiftleft-final-hook 'windmove-left)
     (add-hook 'org-shiftdown-final-hook 'windmove-down)
     (add-hook 'org-shiftright-final-hook 'windmove-right)
+
+    ;; Load images inline after code blocks are evaluated.
+    (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+    (add-hook 'org-mode-hook 'org-display-inline-images)
     )
 
 #+END_SRC
@@ -912,6 +939,21 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
     )
 
 #+END_SRC
+** Use Org-agenda to review journal entries
+Org-journal uses the built in calendar to navigate the archive, but this can be challenging when you can't remember a useful keyword for search or a specific day in which an entry was made. By browsing past entries with =org-agenda=, it's possible to get a full view of the entire journal.
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Set a keybinding for quick access to Org-agenda.
+  (global-set-key (kbd "C-c a") 'org-agenda)
+
+  ;; Include the journal directory in org-agenda's file path.
+  (setq org-agenda-files (list "~/GTD/JOURNAL"))
+
+#+END_SRC
+
+It is then possible to use =C-c a #=, "List stuck projects" to get a list of every journal entry. This could also be accomplished with a custom search if you use the stuck projects list in a GTD system for example, or regularly include journal entries with defined TODO states.
+
 * Configure LaTex and AUCTeX
 [[https://www.gnu.org/software/auctex/][AUCTeX]] is a comprehensive environment for writing TeX and LaTex files.
 
@@ -1110,6 +1152,18 @@ With =ibuffer-projectile= buffers can be [[https://github.com/purcell/ibuffer-pr
     )
 
 #+END_SRC
+** Auto-complete parentheses in programming modes
+Ensuring parentheses are completed in programming modes can be very helpful for both speeding up the coding process and reducing silly, hard to identify, errors. =smartparens= is [[https://github.com/Fuco1/smartparens][a package that handles pair management]] very well.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package smartparens
+    :init
+    (smartparens-global-mode t)
+    )
+
+#+END_SRC
+
 * Configure Common Languages
 ** Statistical analysis with ESS
 /[[http://ess.r-project.org/][Emacs Speaks Statistics]]/ (ESS) is a script-writing package for Emacs that interacts with various [[http://stats.blogoverflow.com/2011/08/using-emacs-to-work-with-r/][statistical analysis packages]] including R, S-Plus, SAS, and Stata.
@@ -1132,6 +1186,8 @@ With =ibuffer-projectile= buffers can be [[https://github.com/purcell/ibuffer-pr
      comint-move-point-for-output t
      ;; Always ask where to save a buffer that contains an R process.
      ess-ask-about-transfile t
+     ;; Don't ask to set transcript files.
+     ess-ask-about-transfile nil
 
      ;; Configure ESS for writing SAS.
 
@@ -1169,6 +1225,22 @@ One package, =elpy= turns Emacs into a full-fledged python IDE. After following 
   (use-package elpy
     :config
     (elpy-enable)
+    )
+
+#+END_SRC
+
+To use Org-mode like a Jupytr Notebook, the package =ob-ipython= must be installed and configured:
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package ob-ipython
+    :config
+    (setq
+     ;; Prevent python shell warnings. See this issue:
+     ;; https://github.com/gregsexton/ob-ipython/issues/89 And this solution:
+     ;; https://github.com/gregsexton/ob-ipython/issues/89#issuecomment-304014256
+     ob-ipython-command "ipython3"
+     )
     )
 
 #+END_SRC
@@ -1284,7 +1356,7 @@ Including a [[http://stackoverflow.com/questions/13603021/what-is-a-repl-in-java
 #+END_SRC
 
 ** PHP
-The default [[https://github.com/ejmr/php-mode][php-mod]]e handles the syntax highlighting and indentation while other modes including =auto-complete= and =flycheck= provide [[https://www.philnewton.net/guides/emacs-as-a-php-editor/][useful additions]] globally.
+The default [[https://github.com/ejmr/php-mode][php-mode]] handles the syntax highlighting and indentation while other modes including =auto-complete= and =flycheck= provide [[https://www.philnewton.net/guides/emacs-as-a-php-editor/][useful additions]] globally.
 
 #+BEGIN_SRC emacs-lisp
 
@@ -1307,7 +1379,11 @@ Editing truly large files, those 1GB or larger, an additional package is necessa
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package vlf-setup)
+  (use-package vlf
+    :config
+    (progn
+      (require 'vlf-setup))
+    )
 
 #+END_SRC
 * Reset the Garbage Collection Threshold
