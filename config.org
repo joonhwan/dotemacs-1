@@ -809,7 +809,7 @@ A short summary of the pros and cons of UTF-8, 16, and 32 can be found at [[http
     (prefer-coding-system 'utf-8)
 
 #+END_SRC
-* Read PDF Files in Emacs
+* Read PDF and Office Files in Emacs
 By default, Emacs supports reading DVI, PostScript (PS), PDF, OpenDocument, and Microsoft Office documents through the Document Viewer or DocView. This works very well with slight modification.
 
 #+BEGIN_SRC emacs-lisp
@@ -825,10 +825,19 @@ More robust PDF tools are available, including annotations, editing, and more. [
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package pdf-tools
-    :config
-    (pdf-tools-install)
-    )
+  ;; As of 12/2017, maintaining pdf-tools on Arch Linux is a nightmare (it breaks after every system update). As such, I have reverted to using DocView in Emacs and Zathura system-wide.
+  ;; (use-package pdf-tools
+  ;;   :config
+  ;;   (pdf-tools-install)
+  ;;   )
+
+#+END_SRC
+
+DocView handles Word and PowerPoint files seamlessly. To view spreadsheets (csv), the package =csv-mode= is required.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package csv-mode)
 
 #+END_SRC
 
@@ -923,6 +932,7 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
     )
 
 #+END_SRC
+
 ** Record thoughts and activities with Org-journal
 [[https://github.com/bastibe/org-journal][Org-journal]] is a package that makes it easy to keep a journal in Org that is integrated into a larger GTD system. It handles a lot of the integration out of the box with just a little tweaking.
 
@@ -978,6 +988,8 @@ Once MacTeX and AUCTeX have been installed, some configuration improves the perf
      TeX-auto-save t
      ;; Enable the RefTeX plugin.
      reftex-plug-into-AUCTeX t
+     ;; Use RefTeX with LaTeX.
+     reftex-plug-into-AUCTeX t
      )
     ;; Load helpful minor modes.
     (add-hook 'LaTex-mode-hook 'visual-line-mode) ; Make editing long lines easier
@@ -985,6 +997,7 @@ Once MacTeX and AUCTeX have been installed, some configuration improves the perf
     (add-hook 'LaTex-mode-hook 'flycheck-mode)    ; Enable dynamic syntax checking
     (add-hook 'LaTex-mode-hook 'LaTeX-math-mode)  ; Enable math mode by default
     (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; Enable RefTeX by default
+    (add-hook 'LaTeX-mode-hook 'reftex-mode)      ; Enable RefTeX by default
     )
 
 #+END_SRC
