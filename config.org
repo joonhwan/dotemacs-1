@@ -296,6 +296,19 @@ Thus, it is enabled here:
 
 #+END_SRC
 
+* Manage frames with EXWM
+While I was very happy with dwm on Arch, I thought it would be interesting to make my workflow even more Emacs-centric. =EXWM= or the [[https://github.com/ch11ng/exwm][Emacs X Windows Manager]] is a tiling window manager built into Emacs. 
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package exwm
+    :config
+    (require 'exwm-config)
+    (exwm-config-default)
+    )
+
+#+END_SRC
+
 * Theme Emacs
 Theming and styling an editor is a very personal process and sometimes, our tastes can be fickle. I am a fan of dark themes in general, and [[http://ethanschoonover.com/solarized][Solarized]] in particular. But sometimes lighting and contrast dictate a light theme. It's helpful to not simply load a list of custom themes, but to be able to quickly toggle between dark and light versions.
 
