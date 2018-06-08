@@ -204,6 +204,70 @@ Many of these defaults were inspired by [[https://github.com/larstvei/dot-emacs/
 
 #+END_SRC
 * Initialize Package Management and Archives
+** Load package repositories
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Require the Emacs package manager.
+  (require 'package)
+
+  ;; Prevent additional installation of packages.
+  (setq package-enable-at-startup nil)
+
+  ;; Add package archives to Emacs.
+
+  (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("melpa-stable" . "https://stable.melpa.org/packages/")
+                           ("melpa" . "https://melpa.org/packages/")
+                           ("marmalade" . "https://marmalade-repo.org/packages/"))
+        ;; Set priorities for the various archives, favoring the
+        ;; canonical over stable over bleeding edge.
+        package-archive-priorities '(("gnu" . 20)
+                                     ("org" . 18)
+                                     ("melpa-stable" . 15)
+                                     ("melpa" . 10)
+                                     ("marmalade" . 5)))
+
+  ;; Start the package manager.
+  (package-initialize)
+
+  (setq package-menu-async t              ; Allow the package menu to
+                                          ; load asynchronously,
+                                          ; speeding up the time from
+                                          ; command execution to
+                                          ; returning the first results.
+        
+        package-menu-hide-low-priority t  ; When a package exists in
+                                          ; multiple archives, only show
+                                          ; the highest priority
+                                          ; instance in our list.
+        )
+
+#+END_SRC
+
+** Bootstrap use-package
+#+BEGIN_SRC emacs-lisp
+
+  ;; Bootstrap use-package. Inspired by:
+  ;; https://stackoverflow.com/a/21065066
+  (if (not (package-installed-p 'use-package))
+      (progn
+        (package-refresh-contents)
+        (package-install 'use-package)))
+
+  ;; Since use-package is not required at runtime, we can delay it.
+  (eval-when-compile
+    (require 'use-package))
+  (require 'bind-key)                ; Load key bindings right away.
+
+  (setq use-package-always-ensure t  ; Always install missing packages.
+        use-package-verbose t        ; Get information about package
+                                     ; loading.
+        )
+
+#+END_SRC
+
 ** Require the Common Lisp compatibility layer
 Emacs Lisp is a distinct version of Lisp and, as a result, there has been some divergence between the two. Some syntax, elements, and features of Common Lisp, are missing from standard Emacs Lisp. This sometimes causes conflicts with certain packages, macros, or functions that rely on Common Lisp conventions. Accommodations for list manipulation, for example, are far more robust in Common Lisp.
 
@@ -229,69 +293,6 @@ Thus, it is enabled here:
 
   ;; Enable better list handling.
   (use-package dash)
-
-#+END_SRC
-
-** Load package repositories
-
-#+BEGIN_SRC emacs-lisp
-
-  ;; Require the Emacs package manager.
-  (require 'package)
-
-  ;; Prevent additional installation of packages.
-  (setq package-enable-at-startup nil)
-
-  ;; Add package archives to Emacs.
-
-  (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                           ("org" . "http://orgmode.org/elpa/")
-                           ("melpa-stable" . "http://stable.melpa.org/packages/")
-                           ("melpa" . "http://melpa.org/packages/")
-                           ("marmalade" . "http://marmalade-repo.org/packages/"))
-        ;; Set priorities for the various archives, favoring the
-        ;; canonical over stable over bleeding edge.
-        package-archive-priorities '(("gnu" . 20)
-                                     ("org" . 18)
-                                     ("melpa-stable" . 15)
-                                     ("melpa" . 10)
-                                     ("marmalade" . 5)))
-
-  ;; Start the package manager.
-  (package-initialize)
-
-  (setq package-menu-async t              ; Allow the package menu to
-                                          ; load asynchronously,
-                                          ; speeding up the time from
-                                          ; command execution to
-                                          ; returning the first results.
-        
-        package-menu-hide-low-priority t  ; When a package exists in
-                                          ; multiple archives, only show
-                                          ; the highest priority
-                                          ; instance in our list.
-        )
-
-#+END_SRC
-** Bootstrap use-package
-#+BEGIN_SRC emacs-lisp
-
-  ;; Bootstrap use-package. Inspired by:
-  ;; https://stackoverflow.com/a/21065066
-  (if (not (package-installed-p 'use-package))
-      (progn
-        (package-refresh-contents)
-        (package-install 'use-package)))
-
-  ;; Since use-package is not required at runtime, we can delay it.
-  (eval-when-compile
-    (require 'use-package))
-  (require 'bind-key)                ; Load key bindings right away.
-
-  (setq use-package-always-ensure t  ; Always install missing packages.
-        use-package-verbose t        ; Get information about package
-                                     ; loading.
-        )
 
 #+END_SRC
 
@@ -516,13 +517,14 @@ With the following customization, adopted from [[http://pragmaticemacs.com/emacs
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package windmove
-    :config
-    ;; Use Shift-arrow to switch windows.
-    (windmove-default-keybindings 'meta)
+  ;; This is a clunky solution that is no longer relevant with EXWM.
+  ;; (use-package windmove
+  ;;   :config
+  ;;   ;; Use Shift-arrow to switch windows.
+  ;;   (windmove-default-keybindings 'meta)
 
-    ;; Wrap around at window edges.
-    (setq windmove-wrap-around t))
+  ;;   ;; Wrap around at window edges.
+  ;;   (setq windmove-wrap-around t))
 
 #+END_SRC
 
@@ -762,7 +764,7 @@ For all the benefits of =ido=, it does not extend to META commands. [[https://gi
     ("M-X" . smex-major-mode-commands)
 
     ;; This keybinding brings back OG M-x.
-    ("C-c C-c M-x" . execute-extended-command)
+    ("C-c M-x" . execute-extended-command)
     )
     )
 
@@ -809,6 +811,7 @@ A short summary of the pros and cons of UTF-8, 16, and 32 can be found at [[http
     (prefer-coding-system 'utf-8)
 
 #+END_SRC
+
 * Read PDF and Office Files in Emacs
 By default, Emacs supports reading DVI, PostScript (PS), PDF, OpenDocument, and Microsoft Office documents through the Document Viewer or DocView. This works very well with slight modification.
 
@@ -920,11 +923,12 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
        (shell . t)
        )
      )
+    ;; I no longer use windmove.
     ;; Make windmove work in org-mode:
-    (add-hook 'org-shiftup-final-hook 'windmove-up)
-    (add-hook 'org-shiftleft-final-hook 'windmove-left)
-    (add-hook 'org-shiftdown-final-hook 'windmove-down)
-    (add-hook 'org-shiftright-final-hook 'windmove-right)
+    ;; (add-hook 'org-shiftup-final-hook 'windmove-up)
+    ;; (add-hook 'org-shiftleft-final-hook 'windmove-left)
+    ;; (add-hook 'org-shiftdown-final-hook 'windmove-down)
+    ;; (add-hook 'org-shiftright-final-hook 'windmove-right)
 
     ;; Load images inline after code blocks are evaluated.
     (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -938,31 +942,51 @@ If Emacs is an operating system, [[http://orgmode.org/][Org is its killer app]].
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package org-journal
-    :config
-    (setq
-     ;; Tell org-journal where it should save files.
-     org-journal-dir "~/GTD/JOURNAL"
-     ;; Save org-journal files as *.org files.
-     org-journal-file-format "%Y%m%d.org"
-     )
-    )
+  ;; Org-journal is a great package, but I have switched to using dash.
+  ;; (use-package org-journal
+  ;;   :config
+  ;;   (setq
+  ;;    ;; Tell org-journal where it should save files.
+  ;;    org-journal-dir "~/GTD/JOURNAL"
+  ;;    ;; Save org-journal files as *.org files.
+  ;;    org-journal-file-format "%Y%m%d.org"
+  ;;    )
+  ;;   )
 
 #+END_SRC
+
 ** Use Org-agenda to review journal entries
 Org-journal uses the built in calendar to navigate the archive, but this can be challenging when you can't remember a useful keyword for search or a specific day in which an entry was made. By browsing past entries with =org-agenda=, it's possible to get a full view of the entire journal.
 
 #+BEGIN_SRC emacs-lisp
 
-  ;; Set a keybinding for quick access to Org-agenda.
-  (global-set-key (kbd "C-c a") 'org-agenda)
+  ;; ;; Set a keybinding for quick access to Org-agenda.
+  ;; (global-set-key (kbd "C-c a") 'org-agenda)
 
-  ;; Include the journal directory in org-agenda's file path.
-  (setq org-agenda-files (list "~/GTD/JOURNAL"))
+  ;; ;; Include the journal directory in org-agenda's file path.
+  ;; (setq org-agenda-files (list "~/GTD/JOURNAL"))
 
 #+END_SRC
 
 It is then possible to use =C-c a #=, "List stuck projects" to get a list of every journal entry. This could also be accomplished with a custom search if you use the stuck projects list in a GTD system for example, or regularly include journal entries with defined TODO states.
+
+** Take notes with Deft
+[[https://jblevins.org/projects/deft/][Deft]] is a note taking and management package inspired by Notational Velocity. The [[http://pragmaticemacs.com/emacs/make-quick-notes-with-deft/][following setup]] forces Deft to use Org in notes.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package deft
+    :config
+    (setq deft-extensions '("org")
+          deft-default-extension "org"
+          deft-text-mode 'org-mode
+          deft-use-filename-as-title t
+          deft-use-filter-string-for-filename t
+          deft-auto-save-interval 0)
+    :bind ("C-c d" . deft)
+    )
+
+#+END_SRC
 
 * Configure LaTex and AUCTeX
 [[https://www.gnu.org/software/auctex/][AUCTeX]] is a comprehensive environment for writing TeX and LaTex files.
@@ -1001,6 +1025,7 @@ Once MacTeX and AUCTeX have been installed, some configuration improves the perf
     )
 
 #+END_SRC
+
 * Enable Spelling and Grammar Check
 To make Emacs a reliable tool for creating and editing text, it must have a convenient, accurate, and reliable spellchecker. There are many options but the built-in =Flyspell= provides an interface to popular dictionaries and engines like =ispell=, =aspell=, and =hunspell=. 
 
@@ -1063,30 +1088,31 @@ The [[https://magit.vc/][project homepage]] and [[https://github.com/magit/magit
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package magit
-    :config
-    (setq
-     ;; When a file changes on disk, Magit reverts buffers which visit files inside
-     ;; the current repository which can impact performance. Only refresh the status
-     ;; buffer when necessary.
-     ;; Bind the Magit status buffer to a convenient key.
-     magit-refresh-status-buffer nil
+    (use-package magit
+      :config
+      (setq
+       ;; When a file changes on disk, Magit reverts buffers which visit files inside
+       ;; the current repository which can impact performance. Only refresh the status
+       ;; buffer when necessary.
+       magit-refresh-status-buffer nil
 
-     ;; Disable the default Emacs version control interface when using Git to prevent
-     ;; it from doubling work or conflicting with Magit.
-     vc-handled-backends (delq 'Git vc-handled-backends)
-     )
-    ;; Improve refresh rate of the references buffer by not displaying tags.
-    (remove-hook 'magit-refs-sections-hook 'magit-insert-tags)
+       ;; Disable the default Emacs version control interface when using Git to prevent
+       ;; it from doubling work or conflicting with Magit.
+       vc-handled-backends (delq 'Git vc-handled-backends)
+       )
+      ;; Improve refresh rate of the references buffer by not displaying tags.
+      (remove-hook 'magit-refs-sections-hook 'magit-insert-tags)
 
-    ;; Performance during commit can be improved by inhibiting a diff of the
-    ;; changes. Comparing these changes, however, is often useful.
-    (remove-hook 'server-switch-hook 'magit-commit-diff)
-  
-    :bind ("C-x g" . magit-status)
-    )
+      ;; Performance during commit can be improved by inhibiting a diff of the
+      ;; changes. Comparing these changes, however, is often useful.
+      (remove-hook 'server-switch-hook 'magit-commit-diff)
+
+      ;; Bind the Magit status buffer to a convenient key.
+      :bind ("C-x g" . magit-status)
+      )
 
 #+END_SRC
+
 ** Mark lines changed since last commit
 Making frequent commits is best practice, but sometimes when lots of editing is happening having an indication of changes is helpful. [[https://github.com/syohex/emacs-git-gutter][git-gutter]] does this in a simple and unobtrusive way.
 
@@ -1117,6 +1143,7 @@ The killer feature of Git is that it creates a complete record of a file's histo
     )
 
 #+END_SRC
+
 * Configure Projectile
 [[https://github.com/bbatsov/projectile][Projectile]] is a project interaction library for Emacs. It makes working at the project level in Emacs easier without introducing unnecessary dependencies. 
 
@@ -1149,6 +1176,7 @@ With =ibuffer-projectile= buffers can be [[https://github.com/purcell/ibuffer-pr
     )
 
 #+END_SRC
+
 * Enable Auto-Complete Globally
 [[https://github.com/auto-complete/auto-complete][auto-complete]] is an intelligent auto-completion extension for Emacs.
 
@@ -1165,6 +1193,7 @@ With =ibuffer-projectile= buffers can be [[https://github.com/purcell/ibuffer-pr
     )
 
 #+END_SRC
+
 ** Auto-complete parentheses in programming modes
 Ensuring parentheses are completed in programming modes can be very helpful for both speeding up the coding process and reducing silly, hard to identify, errors. =smartparens= is [[https://github.com/Fuco1/smartparens][a package that handles pair management]] very well.
 
@@ -1230,6 +1259,7 @@ Ensuring parentheses are completed in programming modes can be very helpful for 
     )
 
 #+END_SRC
+
 ** Python
 One package, =elpy= turns Emacs into a full-fledged python IDE. After following the [[https://github.com/jorgenschaefer/elpy][unique installation instructions]], all that's needed is:
 
@@ -1271,6 +1301,7 @@ Emacs includes =sh-mode= by default for editing shell scripts.
     )
 
 #+END_SRC
+
 ** Multi-language web templates
 Since web documents often incorporate multiple languages, including HTML, CSS, Javascript, and PHP, no single major mode would be satisfactory. Mixing language major modes in Emacs is challenging. Fortunately, there is a single mode, [[http://web-mode.org/][web-mode]] that accommodates most of the common web languages.
 
@@ -1291,24 +1322,6 @@ Since web documents often incorporate multiple languages, including HTML, CSS, J
     )
 
 #+END_SRC
-** CSS/SCSS/SASS
-Emacs includes very good default CSS support by default. For SASS and SCSS there are modes that build on the foundation CSS mode.
-
-#+BEGIN_SRC emacs-lisp
-
-  ;; Load scss-mode.
-  (use-package scss-mode
-    ;; Associate .scss files with scss-mode.
-    :mode ("\\.scss\\'" . scss-mode)
-    )
-
-  ;; Load sass-mode.
-  (use-package sass-mode
-    ;; Associate .sass files with sass-mode.
-    :mode ("\\.sass\\'" . sass-mode)
-    )
-
-#+END_SRC
 
 ** JavaScript
 Some have [[https://www.emacswiki.org/emacs/Js2Mode][called js2]] the "best JavaScript mode available for Emacs." It is very good and the preferred mode for both JavaScript and JSON.
@@ -1319,8 +1332,6 @@ Some have [[https://www.emacswiki.org/emacs/Js2Mode][called js2]] the "best Java
     :mode (
            ;; Associate js2-mode with JavaScript file types.
            ("\\.js\\'" . js2-mode)
-           ;; Associate json-mode with JSON files.
-           ("\\.json\\'" . js2-mode)
            )
     :config
     ;; Enable js2-mode with extras.
@@ -1345,36 +1356,16 @@ Some have [[https://www.emacswiki.org/emacs/Js2Mode][called js2]] the "best Java
 
 #+END_SRC
 
-Including a [[http://stackoverflow.com/questions/13603021/what-is-a-repl-in-javascript][REPL]] makes writing and evaluating JavaScript much easier and more enjoyable. [[http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/][Emacs can use Node for this]], once it's installed.
+When editing JSON files, =json-mode= adds some helpful features.
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package js-comint
-    :config
-    (setq
-     ;; Use Node as the compiler.
-     inferior-js-program-command "node"
-     ;; Define the REPL function.
-     inferior-js-mode-hook
-     (lambda ()
-       ;; We like nice colors
-       (ansi-color-for-comint-mode-on)
-       ;; Deal with some prompt nonsense
-       (add-to-list 'comint-preoutput-filter-functions
-                    (lambda (output)
-                      (replace-regexp-in-string ".*1G\.\.\..*5G" "..."
-                                                (replace-regexp-in-string ".*1G.*3G" "&gt;" output)))))
-     )
+  (use-package json-mode
+    :mode (
+           ;; Associate json-mode with JSON files.
+           ("\\.json\\'" . js2-mode)
+           )
     )
-#+END_SRC
-
-** PHP
-The default [[https://github.com/ejmr/php-mode][php-mode]] handles the syntax highlighting and indentation while other modes including =auto-complete= and =flycheck= provide [[https://www.philnewton.net/guides/emacs-as-a-php-editor/][useful additions]] globally.
-
-#+BEGIN_SRC emacs-lisp
-
-  ;; Automatically enable PHP mode whenever a *.php file is loaded.
-  (add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
 
 #+END_SRC
 
@@ -1399,6 +1390,7 @@ Editing truly large files, those 1GB or larger, an additional package is necessa
     )
 
 #+END_SRC
+
 * Reset the Garbage Collection Threshold
 To preserve performance, garbage collection must be reset to [[https://www.reddit.com/r/emacs/comments/3kqt6e/2_easy_little_known_steps_to_speed_up_emacs_start/][close to the default]] after setup is complete.
 
